@@ -1,0 +1,44 @@
+# Binaries and build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+/bin/
+/dist/
+
+# Air live-reload (see .air.toml tmp_dir)
+/tmp/
+
+# Environment and secrets (use .env.example for committed defaults)
+.env
+.env.*
+!.env.example
+
+# Go coverage and profiling
+*.cover
+*.coverprofile
+coverage.html
+coverage.out
+cpu.prof
+mem.prof
+
+# Dependency directories (if you run `go mod vendor`)
+/vendor/
+
+# IDE and editor
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local Docker overrides (optional per-developer compose)
+docker-compose.override.yml
+
+# Debug
+__debug_bin
