@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"sample-web-http/internal/handler"
 	redisclient "sample-web-http/internal/redis"
 	"sample-web-http/internal/route"
 	"sample-web-http/internal/todo"
+	"time"
 )
 
 func main() {
-	fmt.Printf("Hello and welcome!\n")
+
 	rdb := redisclient.New()
 	todoRepo := todo.NewRepository(rdb)
 	todoService := todo.NewService(todoRepo)
@@ -18,5 +18,13 @@ func main() {
 
 	router := route.NewRouter(h)
 
-	http.ListenAndServe(":8080", router)
+	server := &http.Server{
+		Addr:         ":8080",
+		Handler:      router,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	server.ListenAndServe()
 }
