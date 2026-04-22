@@ -9,6 +9,7 @@ import (
 	"sample-web-http/internal/handler"
 	redisclient "sample-web-http/internal/redis"
 	"sample-web-http/internal/route"
+	redisRepo "sample-web-http/internal/storage/redis"
 	"sample-web-http/internal/todo"
 	"syscall"
 	"time"
@@ -17,7 +18,7 @@ import (
 func main() {
 
 	rdb := redisclient.New()
-	todoRepo := todo.NewRepository(rdb)
+	todoRepo := redisRepo.NewTodoRepo(rdb)
 	todoService := todo.NewService(todoRepo)
 	h := &handler.Handler{TodoService: todoService}
 
