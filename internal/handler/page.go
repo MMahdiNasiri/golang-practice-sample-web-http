@@ -3,14 +3,15 @@ package handler
 import (
 	"encoding/json"
 	"html/template"
-	"math/rand"
 	"net/http"
+	"sample-web-http/internal/user"
 
 	"sample-web-http/internal/todo"
 )
 
 type Handler struct {
 	TodoService *todo.Service
+	UserService *user.Service
 }
 
 type Page struct {
@@ -53,10 +54,7 @@ func (h *Handler) CreateContext(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := rand.Intn(10000)
-	todoVar.ID = id
-
-	result, err := h.TodoService.Create(r.Context(), todoVar.Text, todoVar.ID)
+	result, err := h.TodoService.Create(r.Context(), todoVar.Text, todoVar.CreatedBy)
 	if err != nil {
 		http.Error(w, "failed to save", http.StatusInternalServerError)
 		return

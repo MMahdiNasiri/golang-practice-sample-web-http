@@ -14,9 +14,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
-      - postgres
-      - pgadmin
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
@@ -51,7 +52,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
       POSTGRES_DB: ${POSTGRES_DB:-tododb}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-app}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-app} -d ${POSTGRES_DB:-tododb}"]
       interval: 10s
       timeout: 5s
       retries: 5

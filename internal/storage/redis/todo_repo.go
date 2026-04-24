@@ -19,12 +19,26 @@ func NewTodoRepo(rdb *redis.Client) *TodoRepo {
 	return &TodoRepo{rdb: rdb}
 }
 
-func (r *TodoRepo) Save(ctx context.Context, t *todo.Todo) error {
+func (r *TodoRepo) Create(ctx context.Context, t *todo.Todo) (*todo.Todo, error) {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return r.rdb.Set(ctx, fmt.Sprintf("todo:%d", t.ID), data, 0).Err()
+	if err := r.rdb.Set(ctx, fmt.Sprintf("todo:%d", t.ID), data, 0).Err(); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (r *TodoRepo) Update(ctx context.Context, t *todo.Todo) (*todo.Todo, error) {
+	data, err := json.Marshal(t)
+	if err != nil {
+		return nil, err
+	}
+	if err := r.rdb.Set(ctx, fmt.Sprintf("todo:%d", t.ID), data, 0).Err(); err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 func (r *TodoRepo) Find(ctx context.Context, id int) (*todo.Todo, error) {
@@ -45,11 +59,10 @@ func (r *TodoRepo) Delete(ctx context.Context, id int) error {
 	return r.rdb.Del(ctx, fmt.Sprintf("todo:%d", id)).Err()
 }
 
-func (r *TodoRepo) List(ctx context.Context, pattern string) ([]*todo.Todo, error) {
+func (r *TodoRepo) ListAll(ctx context.Context) ([]*todo.Todo, error) {
 	var t *todo.Todo
-	if pattern == "" {
-		pattern = "*"
-	}
+	pattern := "*"
+
 	keys, err := r.rdb.Keys(ctx, pattern).Result()
 	if err != nil {
 		return nil, err

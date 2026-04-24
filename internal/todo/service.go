@@ -12,13 +12,9 @@ func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) Create(ctx context.Context, text string, id int) (*Todo, error) {
-	t := &Todo{ID: id, Text: text}
-	err := s.repo.Save(ctx, t)
-	if err != nil {
-		return nil, err
-	}
-	return t, nil
+func (s *Service) Create(ctx context.Context, text string, createdBy int) (*Todo, error) {
+	t := &Todo{Text: text, CreatedBy: createdBy}
+	return s.repo.Create(ctx, t)
 }
 
 func (s *Service) Delete(ctx context.Context, id int) error {
@@ -35,23 +31,17 @@ func (s *Service) Delete(ctx context.Context, id int) error {
 }
 
 func (s *Service) Update(ctx context.Context, id int, text string) (*Todo, error) {
-	t := &Todo{ID: id, Text: text}
-
-	_, err := s.repo.Find(ctx, id)
+	t, err := s.repo.Find(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	err = s.repo.Save(ctx, t)
-	if err != nil {
-		return nil, err
-	}
-
-	return t, nil
+	t.Text = text
+	return s.repo.Update(ctx, t)
 }
 
 func (s *Service) List(ctx context.Context) ([]*Todo, error) {
-	todos, err := s.repo.List(ctx, "")
+	todos, err := s.repo.ListAll(ctx)
 	if err != nil {
 		return nil, err
 	}

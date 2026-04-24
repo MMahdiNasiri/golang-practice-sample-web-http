@@ -7,9 +7,13 @@ import (
 	"os"
 	"os/signal"
 	"sample-web-http/internal/handler"
-	redisclient "sample-web-http/internal/redis"
+	"sample-web-http/internal/user"
+
+	//redisclient "sample-web-http/internal/redis"
 	"sample-web-http/internal/route"
-	redisRepo "sample-web-http/internal/storage/redis"
+	//redisRepo "sample-web-http/internal/storage/redis"
+	postgresclient "sample-web-http/internal/postgres"
+	postgresRepo "sample-web-http/internal/storage/postgres"
 	"sample-web-http/internal/todo"
 	"syscall"
 	"time"
@@ -17,10 +21,18 @@ import (
 
 func main() {
 
-	rdb := redisclient.New()
-	todoRepo := redisRepo.NewTodoRepo(rdb)
+	//rdb := redisclient.New()
+	//todoRepo := redisRepo.NewTodoRepo(rdb)
+	portgresdb := postgresclient.New()
+	defer portgresdb.Close()
+	todoRepo := postgresRepo.NewTodoRepo(portgresdb)
 	todoService := todo.NewService(todoRepo)
-	h := &handler.Handler{TodoService: todoService}
+	userRepo := postgresRepo.NewUserRepo(portgresdb)
+	userService := user.NewService(userRepo)
+	h := &handler.Handler{
+		TodoService: todoService,
+		UserService: userService,
+	}
 
 	router := route.NewRouter(h)
 
@@ -47,6 +59,6 @@ func main() {
 	defer cancel()
 	server.Shutdown(ctx)
 	log.Println("Server shutdown complete")
-	rdb.Close()
+	//rdb.Close()
 	log.Println("Redis connection closed")
 }
