@@ -1,9 +1,10 @@
-package handler
+package todo
 
 import (
 	"encoding/json"
 	"html/template"
 	"net/http"
+	"sample-web-http/internal/middleware"
 	"sample-web-http/internal/user"
 
 	"sample-web-http/internal/todo"
@@ -17,6 +18,14 @@ type Handler struct {
 type Page struct {
 	Title string
 	Body  string
+}
+
+func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
+	mux.HandleFunc("/", middleware.RateLimit(h.PageHandler))
+	mux.HandleFunc("/all/", h.ListContext)
+	mux.HandleFunc("/create", h.CreateContext)
+	mux.HandleFunc("/update", h.UpdateContext)
+	mux.HandleFunc("/delete", h.DeleteContext)
 }
 
 func (h *Handler) PageHandler(w http.ResponseWriter, r *http.Request) {

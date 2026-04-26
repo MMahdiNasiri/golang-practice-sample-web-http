@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"sample-web-http/internal/handler"
+	"sample-web-http/internal/authenticate"
+	todoHandler "sample-web-http/internal/handler/todo"
+	userHandler "sample-web-http/internal/handler/user"
 	"sample-web-http/internal/user"
 
 	//redisclient "sample-web-http/internal/redis"
@@ -29,12 +31,17 @@ func main() {
 	todoService := todo.NewService(todoRepo)
 	userRepo := postgresRepo.NewUserRepo(portgresdb)
 	userService := user.NewService(userRepo)
-	h := &handler.Handler{
+	authService := authenticate.NewService()
+	todoh := &todoHandler.Handler{
 		TodoService: todoService,
 		UserService: userService,
 	}
+	userh := &userHandler.Handler{
+		UserService: userService,
+		AuthService: authService,
+	}
 
-	router := route.NewRouter(h)
+	router := route.NewRouter(todoh, userh)
 
 	server := &http.Server{
 		Addr:         ":8080",
