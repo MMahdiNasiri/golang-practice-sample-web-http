@@ -2,6 +2,7 @@ package authenticate
 
 import (
 	"context"
+	"os"
 	"sample-web-http/internal/user"
 	"time"
 
@@ -13,7 +14,9 @@ type TokenService struct {
 }
 
 func NewService() *TokenService {
-	return &TokenService{}
+	return &TokenService{
+		secretKey: []byte(os.Getenv("SECRET_KEY")),
+	}
 }
 
 func (s *TokenService) GenerateToken(ctx context.Context, user *user.User) (string, error) {
