@@ -34,7 +34,6 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/signin-page", h.SignInPage)
 	mux.HandleFunc("/signup", h.SignUp)
 	mux.HandleFunc("/signin", h.SignIn)
-	mux.HandleFunc("/signout", h.SignOut)
 }
 
 func (h *Handler) SignUpPage(w http.ResponseWriter, r *http.Request) {
@@ -127,8 +126,4 @@ func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-func (h *Handler) SignOut(w http.ResponseWriter, r *http.Request) {
-	// todo: remove token jwt maybe
 }
