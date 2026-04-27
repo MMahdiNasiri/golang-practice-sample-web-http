@@ -2,6 +2,7 @@ package authenticate
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sample-web-http/internal/user"
 	"time"
@@ -38,5 +39,9 @@ func (s *TokenService) ValidateToken(ctx context.Context, tokenString string) (i
 		return 0, err
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	return claims["sub"].(int), nil
+	subFloat, ok := claims["sub"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("invalid sub claim")
+	}
+	return int(subFloat), nil
 }

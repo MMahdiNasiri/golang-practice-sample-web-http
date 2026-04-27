@@ -2,6 +2,15 @@ const taskList = document.getElementById("task-list");
 const taskInput = document.getElementById("task-input");
 const addBtn = document.getElementById("add-btn");
 
+function authHeaders() {
+  var headers = { "Content-Type": "application/json", "Accept": "application/json" };
+  var token = localStorage.getItem("token");
+  if (token) {
+    headers["Authorization"] = "Bearer " + token;
+  }
+  return headers;
+}
+
 function createTaskElement(todo) {
   const li = document.createElement("li");
   li.className = "task-item";
@@ -39,7 +48,7 @@ function createTaskElement(todo) {
 }
 
 function loadTodos() {
-  fetch("/all/")
+  fetch("/all/", { headers: authHeaders() })
     .then(function (res) {
       if (!res.ok) throw new Error("failed to fetch");
       return res.json();
@@ -62,7 +71,7 @@ function addTodo() {
 
   fetch("/create", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ text: text }),
   })
     .then(function (res) {
@@ -120,7 +129,7 @@ function startEditing(li, todo) {
 function updateTodo(id, newText, li, span, input, actions, todo) {
   fetch("/update", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ id: id, text: newText }),
   })
     .then(function (res) {
@@ -145,7 +154,7 @@ function updateTodo(id, newText, li, span, input, actions, todo) {
 function deleteTodo(id, li) {
   fetch("/delete", {
     method: "DELETE",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(),
     body: JSON.stringify({ id: id }),
   })
     .then(function (res) {

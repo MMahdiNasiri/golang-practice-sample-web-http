@@ -16,14 +16,14 @@ func Auth(authService *authenticate.TokenService) func(next http.HandlerFunc) ht
 		return func(w http.ResponseWriter, r *http.Request) {
 			tokenHeader := r.Header.Get("Authorization")
 			if tokenHeader == "" {
-				http.Error(w, "missing token", http.StatusUnauthorized)
+				handleUnauthorized(w, r)
 				return
 			}
 			token := strings.TrimPrefix(tokenHeader, "Bearer ")
 
 			userId, err := authService.ValidateToken(r.Context(), token)
 			if err != nil {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
+				handleUnauthorized(w, r)
 				return
 			}
 
@@ -31,4 +31,12 @@ func Auth(authService *authenticate.TokenService) func(next http.HandlerFunc) ht
 			next(w, r.WithContext(ctx))
 		}
 	}
+}
+
+func handleUnauthorized(w http.ResponseWriter, r *http.Request) {
+	if strings.Contains(r.Header.Get("Accept"), "application/json") {
+		http.Error(w, `{"error": "unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+	http.Redirect(w, r, "/signin-page", http.StatusFound)
 }

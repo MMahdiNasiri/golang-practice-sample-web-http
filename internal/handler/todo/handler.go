@@ -63,8 +63,9 @@ func (h *Handler) CreateContext(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)
 		return
 	}
+	userID := r.Context().Value(middleware.UserIDKey).(int)
 
-	result, err := h.TodoService.Create(r.Context(), todoVar.Text, todoVar.CreatedBy)
+	result, err := h.TodoService.Create(r.Context(), todoVar.Text, userID)
 	if err != nil {
 		http.Error(w, "failed to save", http.StatusInternalServerError)
 		return
