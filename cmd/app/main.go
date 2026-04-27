@@ -9,6 +9,7 @@ import (
 	"sample-web-http/internal/authenticate"
 	todoHandler "sample-web-http/internal/handler/todo"
 	userHandler "sample-web-http/internal/handler/user"
+	"sample-web-http/internal/middleware"
 	"sample-web-http/internal/user"
 
 	//redisclient "sample-web-http/internal/redis"
@@ -32,9 +33,12 @@ func main() {
 	userRepo := postgresRepo.NewUserRepo(portgresdb)
 	userService := user.NewService(userRepo)
 	authService := authenticate.NewService()
+	authMiddleware := middleware.Auth(authService)
+
 	todoh := &todoHandler.Handler{
-		TodoService: todoService,
-		UserService: userService,
+		TodoService:    todoService,
+		UserService:    userService,
+		AuthMiddleware: authMiddleware,
 	}
 	userh := &userHandler.Handler{
 		UserService: userService,

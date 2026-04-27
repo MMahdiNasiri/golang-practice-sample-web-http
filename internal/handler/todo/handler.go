@@ -11,8 +11,9 @@ import (
 )
 
 type Handler struct {
-	TodoService *todo.Service
-	UserService *user.Service
+	TodoService    *todo.Service
+	UserService    *user.Service
+	AuthMiddleware func(next http.HandlerFunc) http.HandlerFunc
 }
 
 type Page struct {
@@ -22,10 +23,10 @@ type Page struct {
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/", middleware.RateLimit(h.PageHandler))
-	mux.HandleFunc("/all/", h.ListContext)
-	mux.HandleFunc("/create", h.CreateContext)
-	mux.HandleFunc("/update", h.UpdateContext)
-	mux.HandleFunc("/delete", h.DeleteContext)
+	mux.HandleFunc("/all/", h.AuthMiddleware(h.ListContext))
+	mux.HandleFunc("/create", h.AuthMiddleware(h.CreateContext))
+	mux.HandleFunc("/update", h.AuthMiddleware(h.UpdateContext))
+	mux.HandleFunc("/delete", h.AuthMiddleware(h.DeleteContext))
 }
 
 func (h *Handler) PageHandler(w http.ResponseWriter, r *http.Request) {
