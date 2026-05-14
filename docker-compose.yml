@@ -37,6 +37,22 @@ services:
       retries: 5
       start_period: 5s
 
+  redis-replica:
+    image: redis:7-alpine
+    container_name: app-redis-replica
+    restart: unless-stopped
+    command: >
+      redis-server
+      --replicaof redis 6379
+      --appendonly yes
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      - "6380:6379"
+    networks:
+      - app-network
+
   postgres:
     image: postgres:15
     container_name: todo-app-postgres

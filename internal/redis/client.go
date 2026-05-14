@@ -2,30 +2,62 @@ package redis
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/redis/go-redis/v9"
 )
 
-func New() *redis.Client {
-	port := os.Getenv("REDIS_PORT")
-	if port == "" {
-		port = "6379"
-	}
-	route := os.Getenv("REDIS_ROUTE")
+type Client struct {
+	Master  *redis.Client
+	Replica *redis.Client
+}
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", route, port),
+func New() (*Client, error) {
+	masterPort := os.Getenv("MASTER_REDIS_PORT")
+	if masterPort == "" {
+		masterPort = "6379"
+	}
+	masterRoute := os.Getenv("MASTER_REDIS_ROUTE")
+
+	masterClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", masterRoute, masterPort),
 		Password: "",
 		DB:       0,
 	})
 	var ctx = context.Background()
 
-	_, err := client.Ping(ctx).Result()
+	_, err := masterClient.Ping(ctx).Result()
 	if err != nil {
-		log.Fatal("Error connecting to Redis:", err)
+		return nil, err
 	}
-	return client
+
+	replicaPort := os.Getenv("REPLICA_REDIS_PORT")
+	if replicaPort == "" {
+		replicaPort = "6380"
+	}
+	replicaRoute := os.Getenv("REPLICA_REDIS_ROUTE")
+
+	replicaClient := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", replicaRoute, replicaPort),
+		Password: "",
+		DB:       0,
+	})
+
+	_, err = replicaClient.Ping(ctx).Result()
+
+	if err != nil {
+		return nil, err
+	}
+	client := &Client{
+		Master:  masterClient,
+		Replica: replicaClient,
+	}
+
+	return client, nil
+}
+
+func (client *Client) Close() error {
+	return errors.Join(client.Master.Close(), client.Replica.Close())
 }
