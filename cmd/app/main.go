@@ -10,12 +10,12 @@ import (
 	todoHandler "sample-web-http/internal/handler/todo"
 	userHandler "sample-web-http/internal/handler/user"
 	"sample-web-http/internal/middleware"
+	"sample-web-http/internal/storage/cached"
 	"sample-web-http/internal/user"
 
-	//redisclient "sample-web-http/internal/redis"
-	"sample-web-http/internal/route"
-	//redisRepo "sample-web-http/internal/storage/redis"
 	postgresclient "sample-web-http/internal/postgres"
+	redisclient "sample-web-http/internal/redis"
+	"sample-web-http/internal/route"
 	postgresRepo "sample-web-http/internal/storage/postgres"
 	"sample-web-http/internal/todo"
 	"syscall"
@@ -24,12 +24,21 @@ import (
 
 func main() {
 
-	//rdb := redisclient.New()
-	//todoRepo := redisRepo.NewTodoRepo(rdb)
+	rdb, err := redisclient.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := rdb.Close(); err != nil {
+			log.Println("Error closing Redis:", err)
+		}
+	}()
+
 	portgresdb := postgresclient.New()
 	defer portgresdb.Close()
 	todoRepo := postgresRepo.NewTodoRepo(portgresdb)
-	todoService := todo.NewService(todoRepo)
+	cachedRepo := cached.NewCachedTodoRepo(todoRepo, rdb, 360*time.Second)
+	todoService := todo.NewService(cachedRepo)
 	userRepo := postgresRepo.NewUserRepo(portgresdb)
 	userService := user.NewService(userRepo)
 	authService := authenticate.NewService()
@@ -70,6 +79,4 @@ func main() {
 	defer cancel()
 	server.Shutdown(ctx)
 	log.Println("Server shutdown complete")
-	//rdb.Close()
-	log.Println("Redis connection closed")
 }

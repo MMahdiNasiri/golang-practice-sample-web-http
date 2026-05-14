@@ -32,7 +32,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 func (h *Handler) PageHandler(w http.ResponseWriter, r *http.Request) {
 	pageVar := Page{
 		Title: "TO DO APP",
-		Body:  "no one can hear me.",
+		Body:  "why.",
 	}
 	tmpl, err := template.ParseFiles("templates/page.html")
 	if err != nil {

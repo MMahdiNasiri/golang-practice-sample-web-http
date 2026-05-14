@@ -16,7 +16,9 @@ func NewTodoRepo(db *sql.DB) *TodoRepo {
 }
 
 func (r *TodoRepo) Create(ctx context.Context, t *todo.Todo) (*todo.Todo, error) {
-	err := r.db.QueryRowContext(ctx, "INSERT INTO todos (text, created_by) VALUES ($1, $2) returning id", t.Text, t.CreatedBy).Scan(&t.ID)
+	err := r.db.QueryRowContext(ctx, "INSERT INTO todos (text, created_by) VALUES ($1, $2)"+
+		" returning id, text, status, created_by, created_at, updated_at", t.Text, t.CreatedBy).
+		Scan(&t.ID, &t.Text, &t.Status, &t.CreatedBy, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -24,17 +26,20 @@ func (r *TodoRepo) Create(ctx context.Context, t *todo.Todo) (*todo.Todo, error)
 }
 
 func (r *TodoRepo) Update(ctx context.Context, t *todo.Todo) (*todo.Todo, error) {
-	result, err := r.db.ExecContext(ctx,
-		`UPDATE todos SET text = $1, status = $2, updated_at = NOW() WHERE id = $3`,
+	row := r.db.QueryRowContext(ctx,
+		`UPDATE todos SET text = $1, status = $2, updated_at = NOW() WHERE id = $3
+     RETURNING id, text, status, created_by, created_at, updated_at`,
 		t.Text, t.Status, t.ID,
 	)
+	err := row.Scan(&t.ID, &t.Text, &t.Status, &t.CreatedBy, &t.CreatedAt, &t.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("todo %d not found", t.ID)
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	rows, _ := result.RowsAffected()
-	if rows == 0 {
-		return nil, fmt.Errorf("todo %d not found", t.ID)
-	}
+
 	return t, nil
 }
 

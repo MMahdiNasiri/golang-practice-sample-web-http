@@ -35,7 +35,7 @@ func New() (*Client, error) {
 
 	replicaPort := os.Getenv("REPLICA_REDIS_PORT")
 	if replicaPort == "" {
-		replicaPort = "6380"
+		replicaPort = "6379"
 	}
 	replicaRoute := os.Getenv("REPLICA_REDIS_ROUTE")
 
