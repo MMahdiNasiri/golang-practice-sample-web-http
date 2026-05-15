@@ -27,7 +27,7 @@ func (r *CachedTodoRepo) Create(ctx context.Context, t *todo.Todo) (*todo.Todo, 
 
 	cacheData, err := json.Marshal(t)
 	if err == nil {
-		r.cache.Master.Set(ctx, fmt.Sprintf("todo:%d", t.ID), cacheData, r.ttl)
+		r.cache.ClusterClient.Set(ctx, fmt.Sprintf("todo:%d", t.ID), cacheData, r.ttl)
 	}
 
 	return t, nil
@@ -41,7 +41,7 @@ func (r *CachedTodoRepo) Update(ctx context.Context, t *todo.Todo) (*todo.Todo, 
 
 	cacheData, err := json.Marshal(t)
 	if err == nil {
-		r.cache.Master.Set(ctx, fmt.Sprintf("todo:%d", t.ID), cacheData, r.ttl)
+		r.cache.ClusterClient.Set(ctx, fmt.Sprintf("todo:%d", t.ID), cacheData, r.ttl)
 	}
 
 	return t, nil
@@ -50,7 +50,7 @@ func (r *CachedTodoRepo) Update(ctx context.Context, t *todo.Todo) (*todo.Todo, 
 func (r *CachedTodoRepo) Find(ctx context.Context, id int) (*todo.Todo, error) {
 	var t *todo.Todo
 
-	data, err := r.cache.Replica.Get(ctx, fmt.Sprintf("todo:%d", id)).Result()
+	data, err := r.cache.ClusterClient.Get(ctx, fmt.Sprintf("todo:%d", id)).Result()
 	if err == nil {
 		err = json.Unmarshal([]byte(data), &t)
 		if err == nil {
@@ -63,7 +63,7 @@ func (r *CachedTodoRepo) Find(ctx context.Context, id int) (*todo.Todo, error) {
 	}
 	cacheData, err := json.Marshal(t)
 	if err == nil {
-		r.cache.Master.Set(ctx, fmt.Sprintf("todo:%d", t.ID), cacheData, r.ttl)
+		r.cache.ClusterClient.Set(ctx, fmt.Sprintf("todo:%d", t.ID), cacheData, r.ttl)
 	}
 
 	return t, nil
@@ -74,7 +74,7 @@ func (r *CachedTodoRepo) Delete(ctx context.Context, id int) error {
 	if err != nil {
 		return err
 	}
-	r.cache.Master.Del(ctx, fmt.Sprintf("todo:%d", id))
+	r.cache.ClusterClient.Del(ctx, fmt.Sprintf("todo:%d", id))
 
 	return nil
 }

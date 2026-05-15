@@ -16,8 +16,12 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
+      sentinel-1:
+        condition: service_started
+      sentinel-2:
+        condition: service_started
+      sentinel-3:
+        condition: service_started
 
   redis:
     image: redis:7-alpine
@@ -74,7 +78,6 @@ services:
       retries: 5
       start_period: 10s
 
-
   pgadmin:
     image: dpage/pgadmin4
     container_name: todo-app-pgadmin
@@ -94,6 +97,52 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  sentinel-1:
+    image: redis:7-alpine
+    command: >
+      sh -c "cp /etc/redis/sentinel-template.conf /tmp/sentinel.conf && 
+             redis-sentinel /tmp/sentinel.conf"
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel-template.conf:ro
+
+    ports:
+      - "26379:26379"
+    networks:
+      - app-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  sentinel-2:
+    image: redis:7-alpine
+    command: >
+      sh -c "cp /etc/redis/sentinel-template.conf /tmp/sentinel.conf && 
+             redis-sentinel /tmp/sentinel.conf"
+    volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel-template.conf:ro
+    ports:
+      - "26380:26379"
+    networks:
+      - app-network
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  sentinel-3:
+    image: redis:7-alpine
+    command: >
+      sh -c "cp /etc/redis/sentinel-template.conf /tmp/sentinel.conf && 
+             redis-sentinel /tmp/sentinel.conf"
+      volumes:
+      - ./redis/sentinel.conf:/etc/redis/sentinel-template.conf:ro
+    ports:
+      - "26381:26379"
+    networks:
+      - app-network
+    depends_on:
+      redis:
+        condition: service_healthy
 
 networks:
   app-network:
