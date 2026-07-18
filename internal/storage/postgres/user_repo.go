@@ -73,7 +73,12 @@ func (u *UserRepo) List(ctx context.Context, page int) ([]*user.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}(rows)
 	userList := make([]*user.User, 0)
 	for rows.Next() {
 		var userStruct user.User

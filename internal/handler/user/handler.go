@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"html/template"
+	"io"
 	"net/http"
 
 	"sample-web-http/internal/authenticate"
@@ -41,7 +42,10 @@ func (h *Handler) SignUpPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		return
+	}
 }
 
 func (h *Handler) SignInPage(w http.ResponseWriter, r *http.Request) {
@@ -49,13 +53,22 @@ func (h *Handler) SignInPage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	tmpl.Execute(w, nil)
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		return
+	}
 }
 
 func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 	var signUpVar SignUp
 	var userVar user.User
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}(r.Body)
 
 	err := json.NewDecoder(r.Body).Decode(&signUpVar)
 	if err != nil {
@@ -100,7 +113,13 @@ func (h *Handler) SignUp(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) SignIn(w http.ResponseWriter, r *http.Request) {
 	var signInData SignIn
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}(r.Body)
 	err := json.NewDecoder(r.Body).Decode(&signInData)
 	if err != nil {
 		http.Error(w, "invalid JSON", http.StatusBadRequest)

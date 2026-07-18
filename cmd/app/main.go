@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -35,7 +36,12 @@ func main() {
 	}()
 
 	portgresdb := postgresclient.New()
-	defer portgresdb.Close()
+	defer func(portgresdb *sql.DB) {
+		err := portgresdb.Close()
+		if err != nil {
+			log.Println("Error closing Postgres:", err)
+		}
+	}(portgresdb)
 	todoRepo := postgresRepo.NewTodoRepo(portgresdb)
 	cachedRepo := cached.NewCachedTodoRepo(todoRepo, rdb, 360*time.Second)
 	todoService := todo.NewService(cachedRepo)
@@ -77,6 +83,10 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	server.Shutdown(ctx)
+	err = server.Shutdown(ctx)
+	if err != nil {
+		log.Println("Server shutdown error:", err)
+		return
+	}
 	log.Println("Server shutdown complete")
 }

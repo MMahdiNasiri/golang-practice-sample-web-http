@@ -75,7 +75,12 @@ func (r *TodoRepo) ListAll(ctx context.Context) ([]*todo.Todo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			return
+		}
+	}(rows)
 	for rows.Next() {
 		var t todo.Todo
 		err = rows.Scan(&t.ID, &t.Text, &t.Status, &t.CreatedBy, &t.CreatedAt, &t.UpdatedAt)

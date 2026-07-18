@@ -3,6 +3,7 @@ package todo
 import (
 	"encoding/json"
 	"html/template"
+	"io"
 	"net/http"
 	"sample-web-http/internal/middleware"
 	"sample-web-http/internal/user"
@@ -38,11 +39,19 @@ func (h *Handler) PageHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	tmpl.Execute(w, pageVar)
+	err = tmpl.Execute(w, pageVar)
+	if err != nil {
+		return
+	}
 }
 
 func (h *Handler) ListContext(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(r.Body)
 
 	result, err := h.TodoService.List(r.Context())
 	if err != nil {
@@ -51,12 +60,21 @@ func (h *Handler) ListContext(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	err = json.NewEncoder(w).Encode(result)
+	if err != nil {
+		http.Error(w, "failed to encode", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) CreateContext(w http.ResponseWriter, r *http.Request) {
 	var todoVar todo.Todo
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(r.Body)
 
 	err := json.NewDecoder(r.Body).Decode(&todoVar)
 	if err != nil {
@@ -72,12 +90,21 @@ func (h *Handler) CreateContext(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	err = json.NewEncoder(w).Encode(result)
+	if err != nil {
+		http.Error(w, "failed to encode", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) UpdateContext(w http.ResponseWriter, r *http.Request) {
 	var todoVar todo.Todo
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(r.Body)
 
 	err := json.NewDecoder(r.Body).Decode(&todoVar)
 	if err != nil {
@@ -91,12 +118,21 @@ func (h *Handler) UpdateContext(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	err = json.NewEncoder(w).Encode(result)
+	if err != nil {
+		http.Error(w, "failed to encode", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) DeleteContext(w http.ResponseWriter, r *http.Request) {
 	var todoVar todo.Todo
-	defer r.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			return
+		}
+	}(r.Body)
 
 	err := json.NewDecoder(r.Body).Decode(&todoVar)
 	if err != nil {
@@ -111,5 +147,9 @@ func (h *Handler) DeleteContext(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(todoVar)
+	err = json.NewEncoder(w).Encode(todoVar)
+	if err != nil {
+		http.Error(w, "failed to encode", http.StatusInternalServerError)
+		return
+	}
 }
